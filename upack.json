@@ -1,0 +1,6 @@
+{
+  "name": "skyr-url",
+  "version": "1.4.4",
+  "title": "skyr-url - Datapath Fork",
+  "description": "A C++ library that implements the URL WhatWG specification.  Forked and modified to provide access to IP parsing functions."
+}
