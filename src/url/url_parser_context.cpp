@@ -19,6 +19,7 @@
 #include "url_schemes.hpp"
 #include <skyr/url/ipv4_address.hpp>
 #include <skyr/url/ipv6_address.hpp>
+#include <skyr/url/url_parse.hpp>
 #include "algorithms.hpp"
 
 namespace skyr {
@@ -867,4 +868,60 @@ tl::expected<url_parse_action, url_parse_errc> url_parser_context::parse_fragmen
   return url_parse_action::increment;
 }
 }  // namespace v1
+
+
+tl::expected<parsed_host, url_parse_errc> parse_host2(
+    std::string_view input, bool is_not_special) {
+    if (!input.empty() && (input.front() == '[')) {
+    if (input.back() != ']') {
+      // result.validation_error = true;
+      return tl::make_unexpected(url_parse_errc::invalid_ipv6_address);
+    }
+
+    auto view = std::string_view(input);
+    view.remove_prefix(1);
+    view.remove_suffix(1);
+    auto ipv6_address = parse_ipv6_address(view);
+    if (ipv6_address) {
+      return std::move(ipv6_address).value();
+    }
+    else {
+      return tl::make_unexpected(url_parse_errc::invalid_ipv6_address);
+    }
+  }
+
+  if (is_not_special) {
+    return parse_opaque_host(input);
+  }
+
+  auto domain = percent_encoding::as<std::string>(
+      input | percent_encoding::view::decode);
+  if (!domain) {
+    return tl::make_unexpected(url_parse_errc::cannot_decode_host_point);
+  }
+
+  auto ascii_domain = unicode::domain_to_ascii(domain.value());
+  if (!ascii_domain) {
+    return tl::make_unexpected(url_parse_errc::domain_error);
+  }
+
+  auto it = std::find_if(
+      begin(ascii_domain.value()), end(ascii_domain.value()), is_forbidden_host_point);
+  if (it != end(ascii_domain.value())) {
+    // result.validation_error = true;
+    return tl::make_unexpected(url_parse_errc::domain_error);
+  }
+
+  auto host = parse_ipv4_address(ascii_domain.value());
+  if (!host) {
+    if (host.error() == make_error_code(ipv4_address_errc::overflow)) {
+      return tl::make_unexpected(url_parse_errc::invalid_ipv4_address);
+    }
+    else {
+      return std::move(ascii_domain).value();
+    }
+  }
+  return std::move(host).value();
+}
+
 }  // namespace skyr

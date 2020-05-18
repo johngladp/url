@@ -54,6 +54,13 @@ class ipv6_address {
   explicit ipv6_address(std::array<unsigned short, 8> address)
       : address_(address) {}
 
+  /// The address value
+  /// \returns The address value
+  [[nodiscard]] std::array<unsigned short, 8> address() const noexcept {
+    return address_;
+  }
+
+
    /// \returns The IPv4 address as a string
   [[nodiscard]] std::string to_string() const;
 

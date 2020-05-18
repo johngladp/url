@@ -16,9 +16,9 @@ set(skyr_SRCS
         url/url_parser_context.cpp
         url/url_record.cpp
         url/ipv4_address.cpp
-        url/ipv4_address.hpp
+        #url/ipv4_address.hpp
         url/ipv6_address.cpp
-        url/ipv6_address.hpp
+        #url/ipv6_address.hpp
         url/algorithms.hpp
         url/url_parse.cpp
         url/url_parse_impl.hpp
